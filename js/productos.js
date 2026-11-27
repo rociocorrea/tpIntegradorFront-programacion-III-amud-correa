@@ -6,7 +6,10 @@ const usuario = localStorage.getItem("usuario");
 const fechaDeHoy = (new Date()).toLocaleString("sv-SE").replace("T", " ");
 
 let productos = [];
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+let carrito = JSON.parse(localStorage.getItem("carrito")) || {
+    productos: [],
+    total: 0
+};
 
 async function obtenerProductos() {
     try {
@@ -59,12 +62,12 @@ function agregarAlCarrito(e, idProducto) {
     const productoEncontrado = productos.find(p => p.id === idProducto);
     if (!productoEncontrado) return;
 
-    const existeEnCarrito = carrito.find(p => p.id === idProducto);
+    const existeEnCarrito = carrito.productos.find(p => p.id === idProducto);
 
     if (existeEnCarrito) {
         existeEnCarrito.cantidad++;
     } else {
-        carrito.push({ ...productoEncontrado, cantidad: 1 });
+        carrito.productos.push({ ...productoEncontrado, cantidad: 1 });
     }
 
     actualizarCarrito();
@@ -76,23 +79,26 @@ function actualizarCarrito() {
     const cartTotal = document.getElementById("cart-total");
     const cartCountHeader = document.getElementById("cart-count-header");
 
-    localStorage.setItem('carrito', JSON.stringify(carrito)); //transformo en una cadena de texto
+    const total = carrito.productos.reduce((acc, prod) => acc + (prod.price * prod.cantidad), 0);
+    const totalCantidad = carrito.productos.reduce((acc, prod) => acc + prod.cantidad, 0);
 
-    if (carrito.length === 0) {
+    carrito.total = total;
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+
+    if (carrito.productos.length === 0) {
         cartList.innerHTML = `<p>Tu carrito está vacío</p>`;
         if (cartTotal) cartTotal.textContent = "0";
         if (cartCountHeader) cartCountHeader.textContent = "0";
         return;
     }
-    cartList.innerHTML = carrito.map(prod => `
+
+    cartList.innerHTML = carrito.productos.map(prod => `
         <li class="cart-item">
         <span>${formatearNombre(prod.name)} x${prod.cantidad} - $${(prod.price * prod.cantidad).toLocaleString("es-AR")}</span>
         <button type="button" onclick="quitarDelCarrito(event, ${prod.id})"><i id="btn-eliminar" class="fa-solid fa-trash-can"></i></button>
         </li>
     `).join("");
-
-    const total = carrito.reduce((acc, prod) => acc + (prod.price * prod.cantidad), 0);
-    const totalCantidad = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
 
     if (cartTotal) cartTotal.textContent = total.toLocaleString("es-AR");
     if (cartCountHeader) cartCountHeader.textContent = totalCantidad;
@@ -102,12 +108,12 @@ function actualizarCarrito() {
 function quitarDelCarrito(e, idProducto) {
     if (e) e.preventDefault();
 
-    const prod = carrito.find(p => p.id === idProducto);
+    const prod = carrito.productos.find(p => p.id === idProducto);
 
     if (prod) {
         prod.cantidad--;
         if (prod.cantidad === 0) {
-            carrito = carrito.filter(p => p.id !== idProducto);
+            carrito.productos = carrito.productos.filter(p => p.id !== idProducto);
         }
     }
 
@@ -117,19 +123,14 @@ function quitarDelCarrito(e, idProducto) {
 // Vaciar Carrito completo
 function vaciarCarrito(e) {
     if (e) e.preventDefault();
-    carrito = [];
+    carrito.productos = [];
     actualizarCarrito();
 }
 
 botonCreacion.addEventListener("click", async (event) => {
     event.preventDefault();
-    const carrito = JSON.parse(localStorage.getItem("carrito"));
-    let productIds = carrito.map(producto => producto.id);
-    let totalPrecio = 0;
-
-    carrito.forEach(producto => {
-        totalPrecio += Number(producto.price) * producto.cantidad;
-    });
+    let productIds = carrito.productos.map(producto => producto.id);
+    let totalPrecio = carrito.total;
 
     const request = {
         date: fechaDeHoy,
@@ -137,8 +138,6 @@ botonCreacion.addEventListener("click", async (event) => {
         userName: usuario,
         idProducts: productIds
     };
-
-    console.log(request);
 
     try {
         const response = await fetch(`${urlBase}/api/sales`, {
@@ -180,24 +179,39 @@ function mostrarError(mensaje) {
 function imprimirTicket() {
     const { jsPDF } = window.jspdf;
 
+    const alturaInicial = 0.8;
+    const alturaPorProducto = 0.2;
+    const alturaFinal = 0.6;
+
+    const alturaTicket = alturaInicial +
+        (carrito.productos.length * alturaPorProducto) +
+        alturaFinal;
+
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "in",
-        format: [3, 5]
+        format: [3, alturaTicket]
     });
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.text("InstaFarma", 1.2, 0.3);
     doc.text("AUTOSERVICIO", 1, 0.5);
 
-    doc.setFontSize(8);
-    let alturaProductos = 0.6;    
-    carrito.map(producto => doc.text(`${formatearNombre(producto.name)} x${producto.cantidad}`, 0.1, alturaProductos += 0.2));
+    let alturaProductos = 0.6;
+    carrito.productos.forEach(producto => {
+        const subtotal = producto.price * producto.cantidad;
 
+        doc.text(
+            `${formatearNombre(producto.name)} x${producto.cantidad}    $${subtotal}`,
+            0.1,
+            alturaProductos += alturaPorProducto
+        );
+    });
+    doc.text(`Total: $${carrito.total}`, 1, alturaProductos + 0.5);
     doc.save(`InstaFarma-${fechaDeHoy}.pdf`);
 }
 
-function formatearNombre(nombre){
+function formatearNombre(nombre) {
     return `${nombre.length > limiteCaracteres ? `${nombre.slice(0, limiteCaracteres)}...` : nombre}`;
 }
 
