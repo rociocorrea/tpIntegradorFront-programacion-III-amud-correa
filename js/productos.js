@@ -179,9 +179,9 @@ function mostrarError(mensaje) {
 function imprimirTicket() {
     const { jsPDF } = window.jspdf;
 
-    const alturaInicial = 0.8;
+    const alturaInicial = 1;
     const alturaPorProducto = 0.2;
-    const alturaFinal = 0.6;
+    const alturaFinal = 0.8;
 
     const alturaTicket = alturaInicial +
         (carrito.productos.length * alturaPorProducto) +
@@ -194,10 +194,12 @@ function imprimirTicket() {
     });
 
     doc.setFontSize(9);
-    doc.text("InstaFarma", 1.2, 0.3);
-    doc.text("AUTOSERVICIO", 1, 0.5);
+    doc.text(fechaDeHoy, 1, 0.2);
+    doc.text("InstaFarma", 1.2, 0.5);
+    doc.text("AUTOSERVICIO", 1, 0.7);
+    doc.text(`Cliente: ${usuario}`, 0.1, 0.9);
 
-    let alturaProductos = 0.6;
+    let alturaProductos = 1;
     carrito.productos.forEach(producto => {
         const subtotal = producto.price * producto.cantidad;
 
@@ -207,7 +209,7 @@ function imprimirTicket() {
             alturaProductos += alturaPorProducto
         );
     });
-    doc.text(`Total: $${carrito.total}`, 1, alturaProductos + 0.5);
+    doc.text(`Total: $${carrito.total}`, 1, alturaProductos + 0.6);
     doc.save(`InstaFarma-${fechaDeHoy}.pdf`);
 }
 
