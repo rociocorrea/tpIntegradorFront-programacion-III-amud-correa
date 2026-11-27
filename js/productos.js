@@ -162,6 +162,10 @@ botonCreacion.addEventListener("click", async (event) => {
         console.log(message);
         imprimirTicket();
 
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("carrito");
+        window.location.href = "index.html";
+
     } catch (error) {
         console.error("Error al realizar la compra de productos: ", error);
         return mostrarError("Error de conexión con el servidor");
@@ -188,7 +192,7 @@ function imprimirTicket() {
         alturaFinal;
 
     const doc = new jsPDF({
-        orientation: "portrait",
+        orientation: alturaTicket < 3 ? "landscape" : "portrait",
         unit: "in",
         format: [3, alturaTicket]
     });
