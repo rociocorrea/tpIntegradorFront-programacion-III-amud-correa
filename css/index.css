@@ -194,6 +194,15 @@ input{
     gap: 12px;
 }
 
+.error{
+    color: var(--color-principal);
+    border-radius: 15px;
+    border: solid;
+    border-color: var(--color-principal);
+    padding: 30px;
+    margin: 30px;
+}
+
 @media (max-width: 750px) {
     .landing-main {
         padding: 35px 6%;

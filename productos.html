@@ -18,6 +18,8 @@
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
+    <!-- Importación de jspdf -->
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -37,7 +39,7 @@
                 <ul id="cart-list" class="cart-list"></ul>
                 <h3>Total: $<span id="cart-total">0</span></h3>
                 <button class="boton-invertido" type="button" id="btn-empty" onclick="vaciarCarrito(event)">Vaciar Carrito</button>
-                <button class="boton" type="button" id="btn-empty" onclick="comprar(event)">Comprar</button>
+                <button class="boton" type="button" id="btn-create">Comprar</button>
             </div>
         </section>
     </main>

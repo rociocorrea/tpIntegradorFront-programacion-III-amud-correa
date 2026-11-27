@@ -6,7 +6,7 @@ formBienvenida.addEventListener("submit", event => {
     let nombreUsuario = document.getElementById("form-bienvenida-nombre").value;
 
     if (nombreUsuario.length > 0) {
-        sessionStorage.setItem("usuario", nombreUsuario);
+        localStorage.setItem("usuario", nombreUsuario);
         window.location.href = "productos.html";
     }
 });
